@@ -18,8 +18,8 @@ const complaintSchema = new mongoose.Schema(
     },
     statut: {
       type: String,
-      enum: ["en cours", "résolu", "fermé"],
-      default: "en cours",
+      enum: ["en cours", "résolue", "fermée"], // Ajout de 'résolue' dans l'énumération
+      default: "en cours", // Valeur par défaut
     },
     pieces_jointes: {
       type: [String], // Tableau pour les URLs des fichiers (optionnel)
