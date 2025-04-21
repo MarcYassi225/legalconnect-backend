@@ -13,25 +13,32 @@ const complaintSchema = new mongoose.Schema(
     },
     utilisateur: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Référence au modèle User
+      ref: "User",
       required: true,
     },
     statut: {
       type: String,
-      enum: ["en cours", "résolue", "fermée"], // Ajout de 'résolue' dans l'énumération
-      default: "en cours", // Valeur par défaut
+      enum: ["en cours", "résolue", "fermée"],
+      default: "en cours",
     },
     pieces_jointes: {
-      type: [String], // Tableau pour les URLs des fichiers (optionnel)
+      type: [String],
       default: [],
     },
     historique_actions: [
       {
-        action: String, // Description de l'action (ex: "Consultation avocat")
+        action: String,
         date: {
           type: Date,
           default: Date.now,
         },
+      },
+    ],
+    chat: [
+      {
+        expediteur: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        message: { type: String, required: true },
+        date: { type: Date, default: Date.now },
       },
     ],
     date_creation: {
@@ -44,7 +51,7 @@ const complaintSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Gère automatiquement les champs `createdAt` et `updatedAt`
+    timestamps: true,
   }
 );
 

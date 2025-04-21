@@ -85,27 +85,17 @@ const updateComplaintStatus = async (req, res) => {
     const { id } = req.params;
     const { statut } = req.body;
 
-    console.log("ID reçu :", id); // Log de l'ID de la plainte
-    console.log("Statut reçu :", statut); // Log du statut reçu
-    console.log("Utilisateur connecté :", req.user); // Log de l'utilisateur connecté
-
     const complaint = await Complaint.findById(id);
-
     if (!complaint) {
-      console.log("❌ Plainte non trouvée"); // Log si plainte non trouvée
       return res.status(404).json({ error: "Plainte introuvable." });
     }
 
-    // Vérification si l'utilisateur est le propriétaire de la plainte
     if (complaint.utilisateur.toString() !== req.user.id.toString()) {
-      console.log("❌ Utilisateur non autorisé :", complaint.utilisateur.toString(), "vs", req.user.id); // Log de l'ID utilisateur
       return res.status(403).json({ error: "Non autorisé à modifier cette plainte." });
     }
 
-    // Mise à jour du statut de la plainte
     complaint.statut = statut;
     complaint.date_maj = new Date();
-
     await complaint.save();
 
     res.status(200).json({
@@ -113,8 +103,43 @@ const updateComplaintStatus = async (req, res) => {
       complaint,
     });
   } catch (error) {
-    console.error("❌ Erreur serveur :", error); // Log complet de l'erreur
     res.status(500).json({ error: "Erreur serveur." });
+  }
+};
+
+// ✅ Ajouter un message dans le chat d'une plainte
+const addChatMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: "Le message est requis." });
+    }
+
+    const plainte = await Complaint.findById(id);
+    if (!plainte) {
+      return res.status(404).json({ message: "Plainte non trouvée." });
+    }
+
+    const newMessage = {
+      expediteur: req.user.id,
+      message,
+      date: new Date(),
+    };
+
+    plainte.chat.push(newMessage);
+    plainte.date_maj = new Date();
+
+    await plainte.save();
+
+    res.status(200).json({
+      message: "Message ajouté au chat.",
+      chat: plainte.chat,
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'ajout du message :", error);
+    res.status(500).json({ message: "Erreur serveur." });
   }
 };
 
@@ -123,5 +148,6 @@ module.exports = {
   getComplaints,
   getComplaintById,
   updateComplaint,
-  updateComplaintStatus, // N'oublie pas d'exporter ici !
+  updateComplaintStatus,
+  addChatMessage, // ✅ export du contrôleur du chat
 };

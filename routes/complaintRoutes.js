@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
+
 const {
   createComplaint,
   getComplaints,
   getComplaintById,
   updateComplaint,
-  updateComplaintStatus, // 👈 On importe la nouvelle fonction
+  updateComplaintStatus,
+  addChatMessage, // ✅ Nouvelle fonction importée
 } = require("../controllers/complaintController");
 
 // Route protégée : Créer une plainte
@@ -23,5 +25,8 @@ router.put("/complaints/:id", authMiddleware, updateComplaint);
 
 // ✅ Route protégée : Mettre à jour uniquement le statut d'une plainte
 router.put("/complaints/:id/status", authMiddleware, updateComplaintStatus);
+
+// ✅ Nouvelle route : Ajouter un message dans le chat d’une plainte
+router.post("/complaints/:id/chat", authMiddleware, addChatMessage);
 
 module.exports = router;
