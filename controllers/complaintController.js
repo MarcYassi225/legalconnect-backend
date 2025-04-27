@@ -1,4 +1,6 @@
 const Complaint = require("../models/complaint");
+const fs = require("fs");
+const path = require("path");
 
 // Créer une plainte
 const createComplaint = async (req, res) => {
@@ -141,15 +143,13 @@ const addChatMessage = async (req, res) => {
   }
 };
 
-// Ajouter un fichier au coffre-fort (version corrigée)
+// Ajouter un fichier au coffre-fort
 const addCoffreFortFile = async (req, res) => {
   try {
-    // Validation du fichier
     if (!req.file) {
       return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
-    // Préparation de l'objet fichier
     const fileData = {
       nom_fichier: req.file.originalname,
       type: req.file.mimetype,
@@ -157,10 +157,9 @@ const addCoffreFortFile = async (req, res) => {
       auteur: req.user.id
     };
 
-    // Mise à jour atomique de la plainte
     const updatedComplaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { $push: { coffre_fort: fileData } }, // ici bien mettre $push dans un objet
+      { $push: { coffre_fort: fileData } },
       { new: true, runValidators: true }
     );
     
@@ -168,7 +167,6 @@ const addCoffreFortFile = async (req, res) => {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
 
-    // Réponse réussie
     res.status(201).json({
       message: "Fichier ajouté avec succès",
       file: fileData,
@@ -179,13 +177,40 @@ const addCoffreFortFile = async (req, res) => {
     console.error("Erreur critique:", error);
     res.status(500).json({
       error: "Erreur serveur",
-      details: process.env.NODE_ENV === 'development' ? {
-        message: error.message,
-        stack: error.stack
-      } : undefined
+      details: error.message
     });
   }
 };
+
+// ✅ Fonction corrigée pour supprimer un fichier du coffre-fort
+const deleteCoffreFortFile = async (req, res) => {
+  try {
+    const { complaintId, fileId } = req.params;
+
+    const complaint = await Complaint.findById(complaintId);
+    if (!complaint) {
+      return res.status(404).json({ error: "Plainte non trouvée" });
+    }
+
+    // Vérifie que le fichier existe
+    const file = complaint.coffre_fort.id(fileId);
+    if (!file) {
+      return res.status(404).json({ error: "Fichier non trouvé dans le coffre-fort" });
+    }
+
+    // Supprimer le fichier du tableau
+    complaint.coffre_fort = complaint.coffre_fort.filter(f => f._id.toString() !== fileId);
+
+    complaint.date_maj = new Date();
+    await complaint.save();
+
+    res.status(200).json({ message: "Fichier supprimé du coffre-fort avec succès" });
+  } catch (error) {
+    console.error("Erreur suppression fichier :", error);
+    res.status(500).json({ error: "Erreur serveur", details: error.message });
+  }
+};
+
 
 module.exports = {
   createComplaint,
@@ -195,4 +220,5 @@ module.exports = {
   updateComplaintStatus,
   addChatMessage,
   addCoffreFortFile,
+  deleteCoffreFortFile, // ✅ export aussi ici
 };
