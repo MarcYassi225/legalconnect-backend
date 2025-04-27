@@ -2,7 +2,7 @@ const Complaint = require("../models/complaint");
 const fs = require("fs");
 const path = require("path");
 
-// Créer une plainte
+// ✅ Créer une plainte
 const createComplaint = async (req, res) => {
   try {
     const { titre, description, pieces_jointes } = req.body;
@@ -21,14 +21,14 @@ const createComplaint = async (req, res) => {
       complaint: newComplaint,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Récupérer toutes les plaintes
+// ✅ Récupérer toutes les plaintes
 const getComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find({ utilisateur: req.user.id });
@@ -37,18 +37,18 @@ const getComplaints = async (req, res) => {
       complaints,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Récupérer une plainte par ID
+// ✅ Récupérer une plainte par ID
 const getComplaintById = async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id).populate("utilisateur");
-    
+
     if (!complaint) {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
@@ -58,14 +58,14 @@ const getComplaintById = async (req, res) => {
       complaint,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Mettre à jour une plainte
+// ✅ Mettre à jour une plainte
 const updateComplaint = async (req, res) => {
   try {
     const updatedComplaint = await Complaint.findByIdAndUpdate(
@@ -83,18 +83,18 @@ const updateComplaint = async (req, res) => {
       complaint: updatedComplaint,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Mettre à jour le statut
+// ✅ Mettre à jour uniquement le statut
 const updateComplaintStatus = async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
-    
+
     if (!complaint) {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
@@ -108,18 +108,18 @@ const updateComplaintStatus = async (req, res) => {
       complaint,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Ajouter un message au chat
+// ✅ Ajouter un message dans le chat d'une plainte
 const addChatMessage = async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
-    
+
     if (!complaint) {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
@@ -136,14 +136,14 @@ const addChatMessage = async (req, res) => {
       chat: complaint.chat,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Erreur serveur", 
-      details: err.message 
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: err.message,
     });
   }
 };
 
-// Ajouter un fichier au coffre-fort
+// ✅ Ajouter un fichier au coffre-fort
 const addCoffreFortFile = async (req, res) => {
   try {
     if (!req.file) {
@@ -154,7 +154,7 @@ const addCoffreFortFile = async (req, res) => {
       nom_fichier: req.file.originalname,
       type: req.file.mimetype,
       url: `/uploads/${req.file.filename}`,
-      auteur: req.user.id
+      auteur: req.user.id,
     };
 
     const updatedComplaint = await Complaint.findByIdAndUpdate(
@@ -162,7 +162,7 @@ const addCoffreFortFile = async (req, res) => {
       { $push: { coffre_fort: fileData } },
       { new: true, runValidators: true }
     );
-    
+
     if (!updatedComplaint) {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
@@ -170,19 +170,18 @@ const addCoffreFortFile = async (req, res) => {
     res.status(201).json({
       message: "Fichier ajouté avec succès",
       file: fileData,
-      complaint: updatedComplaint
+      complaint: updatedComplaint,
     });
-
   } catch (error) {
     console.error("Erreur critique:", error);
     res.status(500).json({
       error: "Erreur serveur",
-      details: error.message
+      details: error.message,
     });
   }
 };
 
-// ✅ Fonction corrigée pour supprimer un fichier du coffre-fort
+// ✅ Supprimer un fichier du coffre-fort ET du dossier uploads
 const deleteCoffreFortFile = async (req, res) => {
   try {
     const { complaintId, fileId } = req.params;
@@ -192,25 +191,32 @@ const deleteCoffreFortFile = async (req, res) => {
       return res.status(404).json({ error: "Plainte non trouvée" });
     }
 
-    // Vérifie que le fichier existe
     const file = complaint.coffre_fort.id(fileId);
     if (!file) {
       return res.status(404).json({ error: "Fichier non trouvé dans le coffre-fort" });
     }
 
-    // Supprimer le fichier du tableau
+    // Supprimer physiquement le fichier
+    const filePath = path.join(__dirname, "../uploads", path.basename(file.url));
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Supprimer l'entrée dans MongoDB
     complaint.coffre_fort = complaint.coffre_fort.filter(f => f._id.toString() !== fileId);
 
     complaint.date_maj = new Date();
     await complaint.save();
 
-    res.status(200).json({ message: "Fichier supprimé du coffre-fort avec succès" });
+    res.status(200).json({ message: "Fichier supprimé du coffre-fort et du serveur avec succès" });
   } catch (error) {
     console.error("Erreur suppression fichier :", error);
-    res.status(500).json({ error: "Erreur serveur", details: error.message });
+    res.status(500).json({
+      error: "Erreur serveur",
+      details: error.message,
+    });
   }
 };
-
 
 module.exports = {
   createComplaint,
@@ -220,5 +226,5 @@ module.exports = {
   updateComplaintStatus,
   addChatMessage,
   addCoffreFortFile,
-  deleteCoffreFortFile, // ✅ export aussi ici
+  deleteCoffreFortFile,
 };
