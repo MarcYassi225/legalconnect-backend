@@ -4,12 +4,15 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const {
   getProfile,
   updateProfile,
+  changePassword,
+  ajouterNote,
+  ajouterCommentaire
 } = require("../controllers/userController");
 
-// 🔒 Route protégée : Récupérer le profil utilisateur
 router.get("/profil", authMiddleware, getProfile);
-
-// ✏️ Route protégée : Mettre à jour le profil utilisateur
 router.put("/profil", authMiddleware, updateProfile);
+router.put("/profil/motdepasse", authMiddleware, changePassword);
+router.post("/profil/note", authMiddleware, ajouterNote);
+router.post("/profil/commentaire", authMiddleware, ajouterCommentaire);
 
 module.exports = router;
