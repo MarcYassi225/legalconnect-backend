@@ -8,7 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const profilRoutes = require("./routes/profil"); // 👈 On ajoute le fichier profil
 const complaintRoutes = require("./routes/complaintRoutes"); // 👈 Ajout des routes de plainte
 const homeRoutes = require("./routes/homeRoutes"); // 👈 Ajout des routes pour l'accueil
-const avisRoutes = require("./routes/avisRoutes");  // Pour le dépôt d'avis
+const avisRoutes = require("./routes/avisRoutes");  // Ajout des routes pour les avis
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,7 +23,7 @@ app.use("/api", userRoutes);      // (si tu as déjà des routes dans userRoutes
 app.use("/api", profilRoutes);    // 👈 Ajoute celle-ci pour /api/profil
 app.use("/api", complaintRoutes); // 👈 Ajout des routes pour les plaintes
 app.use("/api", homeRoutes);      // 👈 Ajoute celle-ci pour /api/accueil
-app.use("/api", avisRoutes);  // Ajoute la route pour déposer un avis
+app.use("/api", avisRoutes);  // Intégrer les routes des avis
 
 // Connexion MongoDB
 mongoose.connect("mongodb+srv://legaladmin:admin@legalconnect-cluster.egsxquw.mongodb.net/legalconnect?retryWrites=true&w=majority", {})

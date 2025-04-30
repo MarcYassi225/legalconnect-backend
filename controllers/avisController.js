@@ -2,11 +2,11 @@
 const Avis = require('../models/avis');
 const User = require('../models/user');
 
+// Créer un nouvel avis
 const createAvis = async (req, res) => {
   try {
     const { titre, description, chat, coffreFort, statut } = req.body;
 
-    // Créer un nouvel avis
     const avis = new Avis({
       utilisateurId: req.user.id,  // Utilisateur connecté
       titre,
@@ -16,12 +16,10 @@ const createAvis = async (req, res) => {
       statut: statut || "en attente",  // Statut par défaut "en attente"
     });
 
-    // Sauvegarder l'avis dans la base de données
     await avis.save();
 
-    // Mettre à jour l'utilisateur pour lier l'avis à son profil
     const user = await User.findById(req.user.id);
-    user.avis.push(avis._id);  // Ajouter l'ID de l'avis au tableau d'avis de l'utilisateur
+    user.avis.push(avis._id);
     await user.save();
 
     res.status(201).json({ message: "Avis pour dossier déposé avec succès", avis });
@@ -30,4 +28,55 @@ const createAvis = async (req, res) => {
   }
 };
 
-module.exports = { createAvis };
+// Ajouter un message au chat de l'avis
+const addChatMessage = async (req, res) => {
+  try {
+    const { avisId, texte } = req.body;
+
+    // Trouver l'avis
+    const avis = await Avis.findById(avisId);
+    if (!avis) return res.status(404).json({ message: "Avis non trouvé." });
+
+    // Ajouter le message au chat
+    avis.chat.push({
+      auteurId: req.user.id,  // Utilisateur qui envoie le message
+      texte
+    });
+
+    await avis.save();
+
+    res.status(200).json({ message: "Message ajouté au chat de l'avis.", avis });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur lors de l'ajout du message", error: err.message });
+  }
+};
+
+// Ajouter un fichier au coffre-fort de l'avis
+const addCoffreFortFile = async (req, res) => {
+  try {
+    const { avisId, description } = req.body;  // Assurez-vous de récupérer avisId et description
+
+    // Vérifier si un fichier est présent dans la requête
+    if (!req.file) {
+      return res.status(400).json({ message: "Aucun fichier téléchargé." });
+    }
+
+    // Trouver l'avis en utilisant l'ID
+    const avis = await Avis.findById(avisId);
+    if (!avis) return res.status(404).json({ message: "Avis non trouvé." });
+
+    // Ajouter le fichier au coffre-fort
+    avis.coffreFort.push({
+      fichier: req.file.path,  // Enregistrer le chemin du fichier téléchargé
+      description
+    });
+
+    await avis.save();
+
+    res.status(200).json({ message: "Fichier ajouté au coffre-fort de l'avis.", avis });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur lors de l'ajout du fichier", error: err.message });
+  }
+};
+
+module.exports = { createAvis, addChatMessage, addCoffreFortFile };
