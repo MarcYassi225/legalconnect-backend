@@ -4,13 +4,16 @@ const User = require('../models/user');
 
 const createAvis = async (req, res) => {
   try {
-    const { titre, description } = req.body;
+    const { titre, description, chat, coffreFort, statut } = req.body;
 
     // Créer un nouvel avis
     const avis = new Avis({
       utilisateurId: req.user.id,  // Utilisateur connecté
       titre,
-      description
+      description,
+      chat,  // Messages du chat associés à l'avis
+      coffreFort,  // Fichiers associés à l'avis
+      statut: statut || "en attente",  // Statut par défaut "en attente"
     });
 
     // Sauvegarder l'avis dans la base de données

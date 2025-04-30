@@ -4,9 +4,18 @@ const bcrypt = require("bcrypt");
 // ✅ GET /api/profil
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé." });
-    res.status(200).json({ message: "Profil utilisateur récupéré avec succès.", profil: user });
+    const user = await User.findById(req.user.id)
+      .populate('avis', 'titre')  // Peupler le tableau "avis" avec les titres des avis
+      .select("-password"); // Exclure le mot de passe pour des raisons de sécurité
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    }
+
+    res.status(200).json({
+      message: "Profil utilisateur récupéré avec succès.",
+      profil: user,
+    });
   } catch (err) {
     res.status(500).json({ error: "Erreur serveur", details: err.message });
   }
@@ -82,7 +91,6 @@ const ajouterNote = async (req, res) => {
   }
 };
 
-
 // 💬 POST /api/profil/commentaire
 const ajouterCommentaire = async (req, res) => {
   try {
@@ -108,7 +116,6 @@ const ajouterCommentaire = async (req, res) => {
     res.status(500).json({ message: "Erreur lors de l'ajout du commentaire", error: err.message });
   }
 };
-
 
 module.exports = {
   getProfile,
