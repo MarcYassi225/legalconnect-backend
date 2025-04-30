@@ -17,7 +17,6 @@ const userSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now }
     }
   ],
-  
   commentaires: [
     {
       auteurId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -25,7 +24,8 @@ const userSchema = new mongoose.Schema({
       texte: { type: String },
       date: { type: Date, default: Date.now }
     }
-  ], // <= NOUVEAU
+  ],
+  avis: [{ type: mongoose.Schema.Types.ObjectId, ref: "Avis" }], // <= Nouveau champ pour lier les avis
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
