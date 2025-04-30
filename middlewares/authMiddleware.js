@@ -1,18 +1,26 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/user"); // ajuste le chemin si besoin
 
-const authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization"); // On attend le token dans l'en-tête "Authorization"
+const authMiddleware = async (req, res, next) => {
+  const token = req.header("Authorization");
 
   if (!token) {
     return res.status(401).json({ error: "Accès non autorisé, token manquant." });
   }
 
   try {
-    // Enlever le "Bearer " du token (si présent)
-    const tokenSansBearer = token.split(" ")[1]; // "Bearer <token>"
-    const decoded = jwt.verify(tokenSansBearer, process.env.JWT_SECRET); // Décoder le token avec la clé secrète
-    req.user = decoded; // Ajouter les infos de l'utilisateur à la requête
-    next(); // Passer à la prochaine fonction middleware ou à la route
+    const tokenSansBearer = token.split(" ")[1];
+    const decoded = jwt.verify(tokenSansBearer, process.env.JWT_SECRET);
+
+    // On récupère l'utilisateur complet à partir de l'ID décodé
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ error: "Utilisateur non trouvé." });
+    }
+
+    req.user = user; // Injection de l'utilisateur complet
+    next();
   } catch (err) {
     res.status(401).json({ error: "Token invalide." });
   }

@@ -51,19 +51,37 @@ const changePassword = async (req, res) => {
 // ⭐ POST /api/profil/note
 const ajouterNote = async (req, res) => {
   try {
-    const { professionnelId, note } = req.body;
-    if (note < 1 || note > 5) return res.status(400).json({ message: "Note invalide" });
+    const { professionnelId, valeur } = req.body;
+    const utilisateur = req.user;
+
+    if (!valeur || valeur < 1 || valeur > 5) {
+      return res.status(400).json({ message: "Note invalide. Elle doit être entre 1 et 5." });
+    }
 
     const professionnel = await User.findById(professionnelId);
-    if (!professionnel || professionnel.role !== "juridique") return res.status(404).json({ message: "Professionnel introuvable" });
+    if (!professionnel || professionnel.role !== "juridique") {
+      return res.status(404).json({ message: "Professionnel introuvable." });
+    }
 
-    professionnel.notes.push(note);
+    // Vérifier si l'utilisateur a déjà noté ce professionnel
+    const dejaNote = professionnel.notes.find(note => note.auteurId.toString() === utilisateur.id);
+    if (dejaNote) {
+      return res.status(400).json({ message: "Vous avez déjà noté ce professionnel." });
+    }
+
+    professionnel.notes.push({
+      auteurId: utilisateur.id,
+      valeur
+    });
+
     await professionnel.save();
-    res.status(200).json({ message: "Note ajoutée avec succès" });
+
+    res.status(200).json({ message: "Note ajoutée avec succès." });
   } catch (err) {
-    res.status(500).json({ message: "Erreur lors de l'ajout de la note", error: err.message });
+    res.status(500).json({ message: "Erreur lors de l'ajout de la note.", error: err.message });
   }
 };
+
 
 // 💬 POST /api/profil/commentaire
 const ajouterCommentaire = async (req, res) => {
@@ -72,15 +90,25 @@ const ajouterCommentaire = async (req, res) => {
     const auteur = req.user;
 
     const professionnel = await User.findById(professionnelId);
-    if (!professionnel || professionnel.role !== "juridique") return res.status(404).json({ message: "Professionnel introuvable" });
+    if (!professionnel || professionnel.role !== "juridique") {
+      return res.status(404).json({ message: "Professionnel introuvable" });
+    }
 
-    professionnel.commentaires.push({ auteurId: auteur.id, auteurNom: `${auteur.prenom} ${auteur.nom}`, texte });
+    const nouveauCommentaire = {
+      auteurId: auteur._id,
+      auteurNom: `${auteur.prenom} ${auteur.nom}`,
+      texte
+    };
+
+    professionnel.commentaires.push(nouveauCommentaire);
     await professionnel.save();
+
     res.status(200).json({ message: "Commentaire ajouté avec succès" });
   } catch (err) {
     res.status(500).json({ message: "Erreur lors de l'ajout du commentaire", error: err.message });
   }
 };
+
 
 module.exports = {
   getProfile,

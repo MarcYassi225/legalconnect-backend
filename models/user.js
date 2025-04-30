@@ -10,7 +10,14 @@ const userSchema = new mongoose.Schema({
   telephone: { type: String },
   ville: { type: String },
   siteInternet: { type: String }, // <= NOUVEAU
-  notes: [{ type: Number, min: 1, max: 5 }], // <= NOUVEAU
+  notes: [
+    {
+      auteurId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      valeur: { type: Number, min: 1, max: 5 },
+      date: { type: Date, default: Date.now }
+    }
+  ],
+  
   commentaires: [
     {
       auteurId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
