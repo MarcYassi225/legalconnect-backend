@@ -54,7 +54,7 @@ const addChatMessage = async (req, res) => {
 // Ajouter un fichier au coffre-fort de l'avis
 const addCoffreFortFile = async (req, res) => {
   try {
-    const { avisId, description } = req.body;  // Assurez-vous de récupérer avisId et description
+    const { avisId, description } = req.body;
 
     // Vérifier si un fichier est présent dans la requête
     if (!req.file) {
@@ -79,4 +79,24 @@ const addCoffreFortFile = async (req, res) => {
   }
 };
 
-module.exports = { createAvis, addChatMessage, addCoffreFortFile };
+// Nouvelle fonction pour récupérer les avis des particuliers
+const getAvisForParticulier = async (req, res) => {
+  try {
+    // Vérifier si l'utilisateur est bien un avocat
+    const user = await User.findById(req.user.id);
+    if (user.role !== "juridique") {
+      return res.status(403).json({ message: "Accès interdit : vous devez être un avocat pour consulter les avis." });
+    }
+
+    // Récupérer tous les avis déposés par des particuliers
+    const avis = await Avis.find({ utilisateurId: { $ne: req.user.id } });  // Exclure les avis créés par l'avocat
+    res.status(200).json({
+      message: "Avis des particuliers récupérés avec succès.",
+      avis,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur lors de la récupération des avis.", error: err.message });
+  }
+};
+
+module.exports = { createAvis, addChatMessage, addCoffreFortFile, getAvisForParticulier };
