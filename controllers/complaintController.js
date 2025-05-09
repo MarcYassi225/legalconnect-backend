@@ -28,18 +28,36 @@ const createComplaint = async (req, res) => {
   }
 };
 
-// ✅ Récupérer toutes les plaintes
-const getComplaints = async (req, res) => {
+// ✅ Récupérer toutes les plaintes (pour les avocats)
+const getComplaintsForAvocat = async (req, res) => {
   try {
-    const complaints = await Complaint.find({ utilisateur: req.user.id });
+    // Vérifier que l'utilisateur est bien un avocat (juridique)
+    const user = req.user;
+    console.log("Utilisateur connecté:", user); // Log pour vérifier l'utilisateur
+
+    // Vérification du rôle de l'utilisateur
+    if (user.role !== "juridique") {
+      return res.status(403).json({
+        message: "Accès interdit : vous devez être un avocat pour consulter les plaintes.",
+      });
+    }
+
+    // Récupérer toutes les plaintes (pas de filtre selon l'utilisateur)
+    const complaints = await Complaint.find();
+
+    if (complaints.length === 0) {
+      return res.status(404).json({ message: "Aucune plainte trouvée." });
+    }
+
     res.status(200).json({
-      message: "Plaintes récupérées avec succès",
+      message: "Plaintes récupérées avec succès.",
       complaints,
     });
   } catch (err) {
+    console.error("Erreur lors de la récupération des plaintes:", err);
     res.status(500).json({
-      error: "Erreur serveur",
-      details: err.message,
+      message: "Erreur lors de la récupération des plaintes.",
+      error: err.message,
     });
   }
 };
@@ -220,7 +238,7 @@ const deleteCoffreFortFile = async (req, res) => {
 
 module.exports = {
   createComplaint,
-  getComplaints,
+  getComplaintsForAvocat,
   getComplaintById,
   updateComplaint,
   updateComplaintStatus,

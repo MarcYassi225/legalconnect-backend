@@ -5,18 +5,18 @@ const upload = require("../middlewares/multerMiddleware");
 
 const {
   createComplaint,
-  getComplaints,
+  getComplaintsForAvocat,  // Route pour récupérer toutes les plaintes pour avocat
   getComplaintById,
   updateComplaint,
   updateComplaintStatus,
   addChatMessage,
   addCoffreFortFile,
-  deleteCoffreFortFile, // ✅ Nouvelle fonction
+  deleteCoffreFortFile,
 } = require("../controllers/complaintController");
 
 // Routes de base pour les plaintes
 router.post("/complaints", authMiddleware, createComplaint);
-router.get("/complaints", authMiddleware, getComplaints);
+router.get("/complaints", authMiddleware, getComplaintsForAvocat);  // Changement ici
 router.get("/complaints/:id", authMiddleware, getComplaintById);
 router.put("/complaints/:id", authMiddleware, updateComplaint);
 
@@ -38,6 +38,5 @@ router.delete(
   authMiddleware,
   deleteCoffreFortFile
 );
-
 
 module.exports = router;
